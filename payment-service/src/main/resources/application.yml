@@ -1,0 +1,50 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/paymentdb
+    username: saga
+    password: saga
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway owns the schema
+    open-in-view: false
+  flyway:
+    enabled: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer   # outbox already holds JSON text
+      acks: all
+      properties:
+        enable.idempotence: true
+    consumer:
+      group-id: payment-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.value.default.type: com.example.payment.event.OrderEvent
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: "*"
+
+saga:
+  simulate-refund-failures: 0     # demo: make the first N refund attempts per payment fail
+  compensation-delay-ms: 0        # demo: sleep inside the compensation handler (so you can kill -9 the process)
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+logging:
+  level:
+    org.apache.kafka: WARN

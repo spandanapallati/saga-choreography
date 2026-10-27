@@ -1,0 +1,21 @@
+services:
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: saga-kafka
+    ports:
+      - "9092:9092"
+
+  postgres:
+    image: postgres:16
+    container_name: saga-postgres
+    environment:
+      POSTGRES_USER: saga
+      POSTGRES_PASSWORD: saga
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
